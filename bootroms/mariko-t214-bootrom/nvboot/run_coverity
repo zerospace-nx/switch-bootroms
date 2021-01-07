@@ -1,0 +1,45 @@
+#!/bin/bash
+
+CHIP=$(grep PROJECTS `depth`/tree.make | sed "s/.*PROJECTS\ :=\ //" | sed "s/\ .*//")
+COV_PATH=$(dirname `depth`/../../sw/mobile/tools/coverity/coverity_*/VERSION)
+if [ ! -f $COV_PATH/VERSION ]; then
+    echo "Error locatng Coverity in \$(DEPTH)/../../sw/mobile/tools"
+    exit 1
+fi
+echo -n "$CHIP Coverity "
+cat $COV_PATH/VERSION | grep externalVersion | sed "s/externalVersion=//"
+
+COVERITY_OUT="${CHIP}_cov"
+COVERITY_CONFIG="$COVERITY_OUT/configs/coverity_config.xml"
+PW_CONFIG="$COVERITY_OUT/configs/parser_warnings.conf"
+LEVEL="--aggressiveness-level high --all"
+CHECKEROPT="\
+--disable DEADCODE \
+--disable IDENTICAL_BRANCHES \
+--disable UNUSED_VALUE \
+--checker-option INFINITE_LOOP:report_no_escape:false \
+"
+#MISRA_CONFIG="--misra-config $COV_PATH/config/MISRA/MISRA_c2012_7.config"
+
+make clean 2>&1 >/dev/null
+if [ ! -d $COVERITY_OUT ]; then
+    mkdir -p $COVERITY_OUT/configs
+    grep -e "PW.INTEGER_TRUNCATED" \
+         -e "PW.NOT_COMPATIBLE_WITH_PREVIOUS_DECL" \
+         -e "PW.MIXED_ENUM_TYPE" \
+        $COV_PATH/config/parse_warnings.conf.sample | sed "s/^\/\///" | tee $PW_CONFIG
+    $COV_PATH/bin/cov-configure --config $COVERITY_CONFIG --comptype gcc --compiler arm-none-eabi-gcc --template
+fi
+
+$COV_PATH/bin/cov-build --config $COVERITY_CONFIG --dir $COVERITY_OUT make 2>&1 >/dev/null
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+for i in $($COV_PATH/bin/cov-manage-emit --dir $COVERITY_OUT list | grep sdram | grep -v wrapper | sed "s/\ //g"); do
+    echo $i
+    $COV_PATH/bin/cov-manage-emit --dir $COVERITY_OUT --tu=`echo $i | sed "s/\->.*//"` delete
+done
+$COV_PATH/bin/cov-analyze --config $COVERITY_CONFIG --dir $COVERITY_OUT --parse-warnings-config $PW_CONFIG $LEVEL $MISRA_CONFIG $CHECKEROPT | tee $CHIP/coverity_report.txt
+$COV_PATH/bin/cov-format-errors --dir $COVERITY_OUT --emacs-style >> $CHIP/coverity_report.txt
+echo "--- Report generated in $CHIP/coverity_report.txt ---"
+

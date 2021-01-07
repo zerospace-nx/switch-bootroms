@@ -1,0 +1,51 @@
+#
+# Copyright (c) 2014 NVIDIA Corporation.  All rights reserved.
+# 
+# NVIDIA Corporation and its licensors retain all intellectual property
+# and proprietary rights in and to this software and related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA Corporation is strictly prohibited.
+
+CORELIB := startup
+#find a better place to put the chip specific folder ahb
+CORELIB += aes_dev_mgr
+CORELIB += ahb
+CORELIB += arc
+CORELIB += address_checker
+CORELIB += dispatcher
+CORELIB += devmgr
+CORELIB += fuse
+CORELIB += strap
+CORELIB += bpmp
+#CORELIB += bpmp_dma
+CORELIB += bootloader
+CORELIB += coldboot
+CORELIB += car
+CORELIB += external_pmic
+CORELIB += pmc
+CORELIB += irom_patch
+CORELIB += util
+CORELIB += cryptomgr
+CORELIB += pka
+CORELIB += printf
+CORELIB += se
+CORELIB += sdram
+CORELIB += ssk
+#CORELIB += sw_aes
+CORELIB += rcm
+CORELIB += rsa_dev_mgr
+CORELIB += reset
+CORELIB += rsassa_pss
+CORELIB += pads
+CORELIB += sha_dev_mgr
+CORELIB += wdt
+#CORELIB += apb2jtag
+#CORELIB += lowbattery
+CORELIB += warm_boot
+CORELIB += platform
+CORELIB += debug
+CORELIB += rng
+CORELIB += fidet
+CORELIB += kcv
+

@@ -1,0 +1,61 @@
+<<<<<<< HEAD
+#!/bin/bash
+
+let SECURE_LIMIT=0x12000
+ERR=0
+
+if [ -z $1 ]; then
+    exit 0
+fi
+
+for i in $(grep $'\tbl' $1 | grep -v "r[0-9]" | sed "s/\t/\ /g" | sed "s/:.*\ \(bl\)/\ \1/" | \
+    sed "s/\([0-9a-f]*\)\ b.*\ \([0-9a-f]*\)\ \(<.*>\)/\1-\2-\3/"); do
+#    echo $i
+    let L=0x`echo $i | sed "s/^\([0-9a-f]*\)-.*/\1/"`
+    let A=0x`echo $i | sed "s/^[0-9a-f]*-\([0-9a-f]*\)-.*/\1/"`
+    FUNC=`echo $i | sed "s/.*-.*-\(.*\)/\1/"`
+
+#    printf "%05x, %05x, %s\n" $L $A $FUNC
+    if [ $L -ge $SECURE_LIMIT ]; then
+        break;
+    fi
+
+    if [ $A -ge $SECURE_LIMIT ]; then
+        printf "Secure region violation at %05x to %05x %s\n" $L $A $FUNC
+        ERR=$[ERR + 1 ]
+    fi
+done
+
+exit $ERR
+=======
+#!/bin/bash
+
+ERR=0
+
+if [ -z $1 ]; then
+    exit 0
+fi
+
+SYM=`echo $1 | sed "s/\.dis$/\.sym/"`
+let SECURE_LIMIT=0x`grep __secure_region__ $SYM | sed "s/\ l.*//"`
+printf "SECURE_LIMIT at 0x%x\n" $SECURE_LIMIT
+
+for i in $(grep $'\tbl' $1 | grep -v "r[0-9]" | sed "s/\t/\ /g" | sed "s/:.*\ \(bl\)/\ \1/" | \
+    sed "s/\([0-9a-f]*\)\ b.*\ \([0-9a-f]*\)\ \(<.*>\)/\1-\2-\3/"); do
+#    echo $i
+    let L=0x`echo $i | sed "s/^\([0-9a-f]*\)-.*/\1/"`
+    let A=0x`echo $i | sed "s/^[0-9a-f]*-\([0-9a-f]*\)-.*/\1/"`
+    FUNC=`echo $i | sed "s/.*-.*-\(.*\)/\1/"`
+
+#    printf "%05x, %05x, %s\n" $L $A $FUNC
+    if [ $L -ge $SECURE_LIMIT ]; then
+        break;
+    fi
+
+    if [ $A -ge $SECURE_LIMIT ]; then
+        printf "Secure region violation at %05x to %05x %s\n" $L $A $FUNC
+        ERR=$[ERR + 1 ]
+    fi
+done
+
+exit $ERR

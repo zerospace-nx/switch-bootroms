@@ -1,0 +1,14 @@
+Release notes for Hovi drop
+
+    bootrom: Change 37926738+A1753850 1/24/2017
+    
+1. Change randomization boot loop to use recommended method with mitigation
+2. Double check dispatcher loop ran through all tasks
+3. Add code for SE atomic save/restore and TZRAM carveout
+4. Clear buffer and scratch register containing SRK after use
+5. Fix RegWrite (copy and paste error) checking return value
+6. QSPI fixes for x4 mode
+7. Linker script change to limit stack below RCM buffer.
+8. Code cleanup
+9. RCM authentication fault injection mitigation
+
