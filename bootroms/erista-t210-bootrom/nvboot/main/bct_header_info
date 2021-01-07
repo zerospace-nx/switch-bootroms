@@ -1,0 +1,27 @@
+#!/bin/bash
+export HWROOT=`depth`
+# Calculate the size of the BCT dynamically.
+printf "%s\n%s\n%s\n" "\
+#include <stdio.h>" "\
+#include \"nvboot_bct.h\"" "\
+int main() \
+{ \
+    NvBootConfigTable bct; \
+    printf(\"Bct header size (bytes): 0x%x or %d\\n\", sizeof(NvBootConfigTable), sizeof(NvBootConfigTable)); \
+    printf(\"Offset to signed section (bytes): 0x%x\\n\", (unsigned int)&bct.RandomAesBlock - (unsigned int)&bct); \
+    printf(\"Sizeof NvBootBadBlockTable (bytes): 0x%x\\n\", sizeof(NvBootBadBlockTable)); \
+    printf(\"Sizeof NvBootRsaKeyModulus (bytes): 0x%x\\n\", sizeof(NvBootRsaKeyModulus)); \
+    printf(\"Sizeof NvBootObjectSignature (bytes): 0x%x\\n\", sizeof(NvBootObjectSignature)); \
+    printf(\"Sizeof CustomerData (bytes): 0x%x\\n\", sizeof(bct.CustomerData)); \
+    printf(\"Sizeof NvBootECID (bytes): 0x%x\\n\", sizeof(NvBootECID)); \
+    printf(\"Sizeof NvBootLoaderInfo (bytes): 0x%x\\n\", sizeof(NvBootLoaderInfo)); \
+    printf(\"Sizeof NvBootSdramParams (bytes): 0x%x\\n\", sizeof(NvBootSdramParams)); \
+
+    return 0; \
+} \
+" > /tmp/BctHeaderSize.c
+
+gcc -m32 -I$HWROOT/drv/bootrom/include/sw -I$HWROOT/drv/bootrom/include/t210 -o /tmp/BctHeaderSize /tmp/BctHeaderSize.c
+
+/tmp/BctHeaderSize
+exit

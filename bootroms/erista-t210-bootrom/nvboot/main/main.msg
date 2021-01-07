@@ -1,0 +1,1 @@
+Q_MAIN_SECURE_ROM_ENTER="Enter SecureROM"

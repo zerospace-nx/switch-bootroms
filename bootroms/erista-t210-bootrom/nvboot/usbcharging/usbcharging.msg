@@ -1,0 +1,8 @@
+Q_USBCHARGING_START="Begin UsbCharging"
+Q_USBCHARGING_ENABLED="Usb Charger Detection Enabled"
+Q_USBCHARGING_END="End UsbCharging"
+Q_USBCHARGING_CONFIG_PMIC_PINS="Configure Low Batt and High Current pins for read/write"
+Q_USBCHARGING_LOW_BATT="Low Batt Detected"
+Q_USBCHARGING_HICURRENT_SET="Hi Current Set"
+Q_USBCHARGING_CHARGE_BEFORE_COLDBOOT="Wait for low batt to go high before Coldboot"
+Q_USBCHARGING_FETCH_LOW_BATT_FAILED="Reading low batt status failed"

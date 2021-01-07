@@ -1,0 +1,77 @@
+#!/usr/bin/python
+import struct, sys, struct
+
+# this file takes a .bin file (potentially padded) and generate
+# an ascii file with the following format:
+# one line per word in the memory (32 bits per word)
+# first line at address 0 and incrementing from there
+#
+# It also calculates a CRC on the binary file that can
+# be checked by an other CRC generator independently developed that
+# takes the ascii file as input (to check coherency)
+#
+# this file is not a model of programming style, as the actions
+# performed are essentially done once per ROM release
+
+if len(sys.argv) < 2:
+    print "No file specified"
+    sys.exit()
+    
+File = open(sys.argv[1],mode = "rb")
+String = File.read()
+print "There are " + str((len(String))) + " bytes in the input file" 
+File.close()
+
+# convert as a list of integer in same order
+Bytes = [ struct.unpack("B",x) for x in String]
+Bytes = [ x[0] for x in Bytes]
+
+# calculate CRC in the naive fashion, bytes parsed LSB to MSB
+
+CRC = 32 * [1]
+Poly = 32 * [0]
+Poly[26] = 1
+Poly[23] = 1
+Poly[22] = 1
+Poly[16] = 1
+Poly[12] = 1
+Poly[11] = 1
+Poly[10] = 1
+Poly[ 8] = 1
+Poly[ 7] = 1
+Poly[ 5] = 1
+Poly[ 4] = 1
+Poly[ 2] = 1
+Poly[ 1] = 1
+Poly[ 0] = 1
+
+BitOffsets = range(31)
+BitOffsets.reverse()
+for Byte in Bytes:
+    for i in range(8):
+        Bit = (Byte >> i) & 0x1
+        Feedbackbit = CRC[31]
+        for j in BitOffsets:
+            CRC[j+1] = CRC[j] ^ (Poly[j+1] * Feedbackbit)
+        CRC[0] = Feedbackbit ^ Bit
+
+CRC.reverse() # MSB to LSB
+print "CRC as a string of bits, MSB to LSB 0b" + "".join([str(bit) for bit in CRC])
+CrcValue = 0
+for i in range(32):
+    CrcValue = (CrcValue << 1) + CRC[i]
+print "CRC as a n hexadecimal value " + ("0x%08x" % (CrcValue) )
+
+# create a file of 1 and 0 as required by VLSI
+# the name is the original name with .01fmt appended
+File01 = open(sys.argv[1]+".01fmt", mode = "w")
+# the format is x32, MSB to LSB, byte 0 contains the LSB of word 0
+# first restructure the file as words
+Words = [ (Bytes[i+3] << 24) + (Bytes[i+2] << 16) + (Bytes[i+1] << 8) + Bytes[i] for i in range(0,len(Bytes),4) ]
+# then iterate on them
+for Word in Words:
+    string01 = ""
+    for i in range(32):
+        string01 = str((Word>>i) & 0x1) + string01
+    File01.write(string01 + "\n")
+File01.close()

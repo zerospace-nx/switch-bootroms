@@ -1,0 +1,104 @@
+; --------------------------------------------------------------------------
+;
+; Copyright (c) 2007, NVIDIA Corp.
+; All Rights Reserved.
+;
+; This is UNPUBLISHED PROPRIETARY SOURCE CODE of NVIDIA Corp.;
+; the contents of this file may not be disclosed to third parties, copied or
+; duplicated in any form, in whole or in part, without the prior written
+; permission of NVIDIA Corp.
+;
+; RESTRICTED RIGHTS LEGEND:
+; Use, duplication or disclosure by the Government is subject to restrictions
+; as set forth in subdivision (c)(1)(ii) of the Rights in Technical Data
+; and Computer Software clause at DFARS 252.227-7013, and/or in similar or
+; successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished -
+; rights reserved under the Copyright Laws of the United States.
+;
+; --------------------------------------------------------------------------
+;
+;
+; scatter.irom.txt -- scatter file for AP15 boot ROM compiled for iROM memory
+;
+
+#include "nvboot_limits_int.h"
+#include "nvboot_config.h"
+
+#ifdef BR_LOCATION_IS_IROM
+ #define NVBOOT_BR_BASE NVBOOT_LIMITS_ADDRESS_MAP_IROM_BASE
+#endif
+#ifdef BR_LOCATION_IS_IRAM_PLUS_64K
+ #define NVBOOT_BR_BASE (NVBOOT_LIMITS_ADDRESS_MAP_DATAMEM_BASE+64*1024)
+#endif
+
+#ifndef NVBOOT_BR_BASE
+ #error no legal value for NVBOOT_BR_BASE provided
+#endif
+
+; To get the debug build building, you can change the IROM size back to 96KB.
+;LOAD_IROM_NONSECURE NVBOOT_BR_BASE (NV_ADDRESS_MAP_IROM_SIZE)  ; iROM size is 96K
+LOAD_IROM_NONSECURE NVBOOT_BR_BASE (NV_ADDRESS_MAP_IROM_SIZE-4096)  ; iROM size is 96K - 4K for keys
+{
+        EXEC_IROM_NONSECURE_RO NVBOOT_BR_BASE FIXED NVBOOT_MAIN_NONSECURE_SIZE
+        {
+                * (Boot0, +FIRST)
+                * (Uart)
+                * (Uart_asm)
+                * (MainNonsecure)
+                * (FuseNonsecure)
+                * (ClocksNonsecure)
+		* (IPatchNonsecure)
+                * (PadsNonsecure)
+                * (PmcNonsecure)
+                * (ResetNonsecure)
+                * (UtilNonsecure)
+                * (SecureExitCode, +LAST)
+        }
+
+        EXEC_IROM_SECURE_RO (NVBOOT_BR_BASE+NVBOOT_MAIN_NONSECURE_SIZE) FIXED
+        {
+                * (Boot0Secure, +FIRST)
+                * (+RO)
+        }
+
+; leave the top 8K free for the stack (and the zero-size heap)
+
+        EXEC_IRAM_RW_BIT NVBOOT_BIT_IRAM_START
+        {
+                * (MainBIT)
+        }
+
+        EXEC_IRAM_RW_BCT +0 UNINIT
+        {
+                * (MainBCT)
+        }
+
+	EXEC_IRAM_RW_EXCP +0 UNINIT
+	{
+		* (ExcpHndlr)
+	}
+
+        EXEC_SECURE_EXIT_DATA +0 UNINIT
+        {
+                * (SecureExitData)
+        }
+
+        EXEC_IRAM_RW +0 
+        {
+                * (+RW, +ZI)
+        }
+
+        EXEC_IRAM_NON_ZI_BUFFER +0 UNINIT
+        {
+                * (NonZIBuffer)
+        }
+
+        ; allocate 8KB for stack at top of bank A of iRAM;
+        ; region ends at 0x4000_8000 since the length is negative;
+        ARM_LIB_STACK NV_ADDRESS_MAP_IRAM_A_BASE+NVBOOT_MAIN_IRAM_SIZE EMPTY -NVBOOT_MAIN_STACK_SIZE
+        {
+                ; empty region used to place stack
+        }
+
+        ; heap is in fact mapped here but never used and not even defined
+}

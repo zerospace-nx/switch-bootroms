@@ -1,0 +1,32 @@
+#!/bin/sh
+
+#let SECURE_LIMIT=0xfff01000
+let SECURE_LIMIT=0x00101000
+ERR=0
+F=`basename $1`
+
+if [ -z `expr "$F" : "\(.*irom\)"` ]; then
+    exit 0
+fi
+
+for i in $(grep -ir "BL.*\;" $1 | sed "s/\(0x[0-9a-f]*\):.*\(BL \)\ *\(.*\)\ ;\(.*\)/\1\ \2\4-\3/" | grep "BL\ " | sed "s/\ BL\ \ /-/"); do
+#    echo $i
+    let L=`echo $i | sed "s/^\(0x[0-9a-f]*\)-.*/\1/"`
+    let A=`echo $i | sed "s/0x[0-9a-f]*-\(0x[0-9a-f]*\)-.*/\1/"`
+    FUNC=`echo $i | sed "s/.*-.*-\(.*\)/\1/"`
+
+    if [ $L -ge $SECURE_LIMIT ]; then
+        break
+    fi
+#    printf "0x%lx, 0x%lx\n" $L $A
+    if [ $A -ge $SECURE_LIMIT ]; then
+        printf "Secure region violation at 0x%x to 0x%x ( %s )\n" $L $A $FUNC
+        ERR=$[ERR + 1]
+    fi
+done
+
+if [ $ERR -eq 0 ]; then
+    exit 0
+else
+    exit $ERR
+fi
