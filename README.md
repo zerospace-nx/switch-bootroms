@@ -1,5 +1,4 @@
 # switch-bootroms
-![banner](https://github.com/zerospace-nx/switch-bootroms/blob/main/banner1.png)
 
 ## Explanation
 This is the Nintendo Switch console bootrom by NVIDIA leaked source code from one of the Gigaleak archives.
